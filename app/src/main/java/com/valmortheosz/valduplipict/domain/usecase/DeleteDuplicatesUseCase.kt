@@ -23,7 +23,8 @@ class DeleteDuplicatesUseCase @Inject constructor(
                 for (img in filesToDelete) {
                     val file = File(img.filePath)
                     if (file.exists()) {
-                        val trashFile = File(trashDir, "${System.currentTimeMillis()}_${file.name}")
+                        val safeOriginalPath = file.absolutePath.replace("/", "__")
+                        val trashFile = File(trashDir, "${System.currentTimeMillis()}__${safeOriginalPath}")
                         file.renameTo(trashFile)
                     }
                 }

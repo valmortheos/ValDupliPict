@@ -28,6 +28,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -55,6 +58,7 @@ fun DashboardScreen(
     val uiState by viewModel.uiState.collectAsState()
     val scanProgress by viewModel.scanProgress.collectAsState()
     val context = LocalContext.current
+    var showCancelDialog by remember { mutableStateOf(false) }
     val haptics = LocalHapticFeedback.current
 
     val permissionState = rememberPermissionState(
@@ -212,7 +216,7 @@ fun DashboardScreen(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     if (isScanning) {
-                        viewModel.cancelScan()
+                        showCancelDialog = true
                     } else {
                         if (permissionState.status.isGranted) {
                             viewModel.startScan()
@@ -256,6 +260,30 @@ fun DashboardScreen(
                 )
             }
         }
+    }
+
+    if (showCancelDialog) {
+        AlertDialog(
+            onDismissRequest = { showCancelDialog = false },
+            title = { Text("Cancel current scan?") },
+            text = { Text("This process will stop immediately.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.cancelScan()
+                        showCancelDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Cancel Scan")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { showCancelDialog = false }) {
+                    Text("Continue Scan")
+                }
+            }
+        )
     }
 }
 

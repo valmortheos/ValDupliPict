@@ -1,6 +1,7 @@
 package com.valmortheosz.valduplipict.ui.settings
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -85,6 +86,23 @@ fun SettingsScreen(
                     text = stringResource(R.string.similarity_threshold),
                     style = MaterialTheme.typography.titleMedium
                 )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val presets = listOf(
+                        "Very Strict" to 0.95f,
+                        "Strict" to 0.90f,
+                        "Balanced" to 0.85f,
+                        "Relaxed" to 0.80f,
+                        "Aggressive" to 0.75f
+                    )
+
+                    // We'll wrap them in a horizontal scroll or just map the first few if space is tight.
+                    // For safety, let's use a FlowRow or horizontal scroll
+                }
+
+                // Advanced Slider
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Slider(
                         value = similarityThreshold,
@@ -96,6 +114,18 @@ fun SettingsScreen(
                         text = "${(similarityThreshold * 100).toInt()}%",
                         modifier = Modifier.padding(start = 16.dp)
                     )
+                }
+
+                // Real buttons for presets
+                Row(
+                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChip(selected = similarityThreshold == 0.95f, onClick = { viewModel.updateThreshold(0.95f) }, label = { Text("Very Strict (95%)") })
+                    FilterChip(selected = similarityThreshold == 0.90f, onClick = { viewModel.updateThreshold(0.90f) }, label = { Text("Strict (90%)") })
+                    FilterChip(selected = similarityThreshold == 0.85f, onClick = { viewModel.updateThreshold(0.85f) }, label = { Text("Balanced (85%)") })
+                    FilterChip(selected = similarityThreshold == 0.80f, onClick = { viewModel.updateThreshold(0.80f) }, label = { Text("Relaxed (80%)") })
+                    FilterChip(selected = similarityThreshold == 0.75f, onClick = { viewModel.updateThreshold(0.75f) }, label = { Text("Aggressive (75%)") })
                 }
             }
 
@@ -122,13 +152,23 @@ fun SettingsScreen(
                     }
                 }
 
+                Row(
+                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    AssistChip(onClick = { viewModel.addQuickExclusions(listOf("/storage/emulated/0/WhatsApp")) }, label = { Text("WhatsApp") })
+                    AssistChip(onClick = { viewModel.addQuickExclusions(listOf("/storage/emulated/0/Telegram")) }, label = { Text("Telegram") })
+                    AssistChip(onClick = { viewModel.addQuickExclusions(listOf("/storage/emulated/0/Download")) }, label = { Text("Download") })
+                    AssistChip(onClick = { viewModel.addQuickExclusions(listOf("/storage/emulated/0/DCIM/.thumbnails")) }, label = { Text(".thumbnails") })
+                }
+
                 OutlinedButton(
                     onClick = { showAddFolderDialog = true },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Add Folder Exclusion")
+                    Text("Add Custom Path")
                 }
             }
 
