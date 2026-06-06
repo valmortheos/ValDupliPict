@@ -27,20 +27,43 @@
 
 Proyek ini menggunakan **GitHub Actions** untuk mem-build dan men-sign APK (Release) secara otomatis pada setiap `push` ke branch `main`.
 
-### Langkah Konfigurasi GitHub Secrets
+### Generate Keystore (WAJIB menggunakan parameter ini)
 
-Agar build APK berhasil di GitHub Actions, Anda perlu mengatur **Secrets** di repositori GitHub Anda:
+```bash
+keytool -genkeypair \
+  -alias valduplipict-key \
+  -keyalg RSA \
+  -keysize 2048 \
+  -validity 10000 \
+  -keystore keystore.jks \
+  -storetype JKS \
+  -storepass YOUR_STORE_PASSWORD \
+  -keypass YOUR_KEY_PASSWORD \
+  -dname "CN=ValDupliPict, OU=Dev, O=Valmortheosz, L=ID, ST=ID, C=ID"
+```
 
-1. Buka repositori Anda di GitHub.
-2. Buka **Settings** -> **Secrets and variables** -> **Actions**.
-3. Tambahkan 4 **New repository secret** berikut:
+> ⚠️ Gunakan Java 8 atau Java 11. Jangan gunakan Java 17+ untuk generate keystore.
 
-| Nama Secret | Deskripsi / Cara Mengisi |
-| :--- | :--- |
-| `KEYSTORE_BASE64` | Jalankan perintah `base64 -w 0 keystore.jks` pada file keystore Anda, lalu salin outputnya ke sini. |
-| `KEYSTORE_PASSWORD` | Password dari keystore Anda. (Jika Anda menggunakan dummy yang digenerate oleh Jules, nilainya: `android`) |
-| `KEY_ALIAS` | Alias kunci keystore Anda. (Jika menggunakan dummy, nilainya: `valduplipict-key`) |
-| `KEY_PASSWORD` | Password dari alias kunci Anda. (Jika menggunakan dummy, nilainya: `android`) |
+### Encode Keystore ke Base64
+
+```bash
+# Linux / macOS
+base64 -w 0 keystore.jks
+
+# Windows (PowerShell)
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("keystore.jks"))
+```
+
+### Isi GitHub Secrets
+
+Buka repository → Settings → Secrets and variables → Actions → New repository secret
+
+| Secret Name | Nilai |
+|---|---|
+| `KEYSTORE_BASE64` | Output base64 dari perintah di atas |
+| `KEYSTORE_PASSWORD` | Password yang dipakai di `-storepass` |
+| `KEY_ALIAS` | `valduplipict-key` |
+| `KEY_PASSWORD` | Password yang dipakai di `-keypass` |
 
 ### Cara Mengunduh APK Release
 
