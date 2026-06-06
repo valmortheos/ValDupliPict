@@ -1,0 +1,45 @@
+<resources>
+    <string name="app_name">ValDupliPict</string>
+    <string name="welcome_title">Welcome to ValDupliPict</string>
+    <string name="welcome_desc">A smart application to find and remove duplicate photos on your device completely offline.</string>
+    <string name="permission_title">Storage Permission</string>
+    <string name="permission_desc">We need permission to read your photos in order to detect duplicates.</string>
+    <string name="start_saving_title">Start Saving Space</string>
+    <string name="start_saving_desc">Ready to free up storage space on your device? Let\'s get started!</string>
+    <string name="btn_back">Back</string>
+    <string name="btn_allow">Allow</string>
+    <string name="btn_finish">Finish</string>
+    <string name="btn_next">Next</string>
+
+    <string name="dashboard_title">Dashboard</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_results">Results</string>
+    <string name="nav_settings">Settings</string>
+    <string name="storage_stats">Storage Statistics</string>
+    <string name="total_images">Total Images</string>
+    <string name="duplicate_groups">Duplicate Groups</string>
+    <string name="saved_space">Space Saved</string>
+    <string name="start_scan">Start Scan</string>
+
+    <string name="scan_results_title">Scan Results</string>
+    <string name="no_duplicates">No duplicates found</string>
+    <string name="similar_pct">%1$d%% Similar</string>
+    <string name="saved_amount">Save %1$s</string>
+    <string name="confirm_delete_title">Confirm Deletion</string>
+    <string name="confirm_delete_desc">You are about to delete %1$d selected images. Images will be moved to the Recycle Bin if the feature is enabled.</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_delete">Delete</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="similarity_threshold">Similarity Threshold</string>
+    <string name="use_recycle_bin">Use Recycle Bin</string>
+    <string name="recycle_bin_desc">If enabled, files will be moved to .valduplipict_trash first before being permanently deleted.</string>
+    <string name="open_recycle_bin">Open Recycle Bin</string>
+    <string name="about_app">About App</string>
+    <string name="app_version">ValDupliPict v1.0.0</string>
+    <string name="app_desc">Detect duplicate photos offline.</string>
+
+    <string name="recycle_bin_title">Recycle Bin</string>
+    <string name="empty_bin_btn">Empty</string>
+    <string name="bin_empty_msg">Recycle Bin is empty</string>
+</resources>

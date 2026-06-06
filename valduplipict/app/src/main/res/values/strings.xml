@@ -1,0 +1,45 @@
+<resources>
+    <string name="app_name">ValDupliPict</string>
+    <string name="welcome_title">Selamat Datang di ValDupliPict</string>
+    <string name="welcome_desc">Aplikasi pintar untuk menemukan dan menghapus foto duplikat di perangkat Anda secara offline.</string>
+    <string name="permission_title">Izin Akses Penyimpanan</string>
+    <string name="permission_desc">Kami membutuhkan izin untuk membaca foto Anda agar dapat mendeteksi duplikat.</string>
+    <string name="start_saving_title">Mulai Hemat Ruang</string>
+    <string name="start_saving_desc">Siap untuk membebaskan ruang penyimpanan di perangkat Anda? Mari kita mulai!</string>
+    <string name="btn_back">Kembali</string>
+    <string name="btn_allow">Izinkan</string>
+    <string name="btn_finish">Selesai</string>
+    <string name="btn_next">Lanjut</string>
+
+    <string name="dashboard_title">Dashboard</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_results">Hasil</string>
+    <string name="nav_settings">Pengaturan</string>
+    <string name="storage_stats">Statistik Penyimpanan</string>
+    <string name="total_images">Total Gambar</string>
+    <string name="duplicate_groups">Grup Duplikat</string>
+    <string name="saved_space">Ruang Dihemat</string>
+    <string name="start_scan">Mulai Scan</string>
+
+    <string name="scan_results_title">Hasil Scan</string>
+    <string name="no_duplicates">Tidak ada duplikat ditemukan</string>
+    <string name="similar_pct">%1$d%% Mirip</string>
+    <string name="saved_amount">Hemat %1$s</string>
+    <string name="confirm_delete_title">Konfirmasi Hapus</string>
+    <string name="confirm_delete_desc">Anda akan menghapus %1$d gambar yang dipilih. Gambar akan dipindahkan ke Recycle Bin jika fitur tersebut aktif.</string>
+    <string name="btn_cancel">Batal</string>
+    <string name="btn_delete">Hapus</string>
+
+    <string name="settings_title">Pengaturan</string>
+    <string name="similarity_threshold">Threshold Kemiripan</string>
+    <string name="use_recycle_bin">Gunakan Recycle Bin</string>
+    <string name="recycle_bin_desc">Jika diaktifkan, file akan dipindah ke .valduplipict_trash terlebih dahulu sebelum dihapus permanen.</string>
+    <string name="open_recycle_bin">Buka Recycle Bin</string>
+    <string name="about_app">Tentang Aplikasi</string>
+    <string name="app_version">ValDupliPict v1.0.0</string>
+    <string name="app_desc">Mendeteksi duplikat foto secara offline.</string>
+
+    <string name="recycle_bin_title">Recycle Bin</string>
+    <string name="empty_bin_btn">Kosongkan</string>
+    <string name="bin_empty_msg">Recycle Bin kosong</string>
+</resources>
