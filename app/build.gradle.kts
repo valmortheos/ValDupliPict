@@ -30,6 +30,7 @@ android {
                 storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
                 keyAlias = System.getenv("KEY_ALIAS") ?: ""
                 keyPassword = System.getenv("KEY_PASSWORD") ?: ""
+                storeType = "JKS"
             } else {
                 // Dummy values for local builds if no keystore configured
                 storeFile = file("debug.keystore")
