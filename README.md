@@ -1,0 +1,2 @@
+# ValDupliPict
+Duplicate Image detector
