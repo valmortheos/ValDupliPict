@@ -20,7 +20,7 @@ class ScanImagesUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(
         similarityThreshold: Float = 0.90f,
-        onProgress: (Int, Int) -> Unit = { _, _ -> }
+        onProgress: suspend (state: String, processed: Int, total: Int, fileName: String, duplicates: Int, spaceSaved: Long) -> Unit = { _, _, _, _, _, _ -> }
     ): List<DuplicateGroup> = withContext(Dispatchers.Default) {
         val allImages = scanRepository.getAllImagesFromMediaStore()
         if (allImages.isEmpty()) return@withContext emptyList()
@@ -43,12 +43,12 @@ class ScanImagesUseCase @Inject constructor(
                 processedImages.add(newImg)
             }
             progress++
-            if (progress % 10 == 0) onProgress(progress, total)
+            if (progress % 10 == 0) onProgress("HASHING", progress, total, img.fileName, 0, 0L)
         }
 
         scanRepository.saveImagesToCache(processedImages)
 
-        onProgress(total, total)
+        onProgress("FINALIZING", total, total, "Menganalisis duplikat...", 0, 0L)
 
         // Find duplicates
         val duplicateGroups = mutableListOf<DuplicateGroup>()
@@ -119,6 +119,9 @@ class ScanImagesUseCase @Inject constructor(
             }
         }
 
+        val duplicatesCount = duplicateGroups.size
+        val spaceSaved = duplicateGroups.sumOf { it.totalWastedSpace }
+        onProgress("COMPLETED", total, total, "Selesai", duplicatesCount, spaceSaved)
         return@withContext duplicateGroups
     }
 }

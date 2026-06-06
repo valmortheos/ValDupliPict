@@ -1,6 +1,14 @@
 package com.valmortheosz.valduplipict.worker
 
 import android.content.Context
+
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.os.Build
+import android.content.pm.ServiceInfo
+import androidx.core.app.NotificationCompat
+import androidx.work.ForegroundInfo
+
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
@@ -21,11 +29,24 @@ class ScanWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+        setForeground(buildForegroundInfo("Memulai scan...", 0))
         try {
             val similarityThreshold = inputData.getFloat("similarityThreshold", 0.90f)
 
-            val duplicateGroups = scanImagesUseCase.invoke(similarityThreshold) { progress, total ->
-                setProgressAsync(workDataOf("progress" to progress, "total" to total))
+            val duplicateGroups = scanImagesUseCase.invoke(similarityThreshold) { state, processed, total, fileName, duplicates, spaceSaved ->
+                val pct = if (total > 0) (processed * 100 / total) else 0
+                setForeground(buildForegroundInfo(fileName.ifEmpty { "Memproses..." }, pct))
+                setProgressAsync(
+                    workDataOf(
+                        "state" to state,
+                        "processed" to processed,
+                        "total" to total,
+                        "current_file" to fileName,
+                        "duplicates" to duplicates,
+                        "space_saved" to spaceSaved,
+                        "algorithm" to "dHash"
+                    )
+                )
             }
 
             duplicateRepository.updateDuplicateGroups(duplicateGroups)
@@ -35,5 +56,36 @@ class ScanWorker @AssistedInject constructor(
             e.printStackTrace()
             Result.failure()
         }
+    }
+
+    private fun buildForegroundInfo(text: String, progress: Int): ForegroundInfo {
+        createNotificationChannel()
+        val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+            .setContentTitle("ValDupliPict")
+            .setContentText(text)
+            .setSmallIcon(android.R.drawable.ic_menu_gallery)
+            .setOngoing(true)
+            .setProgress(100, progress, progress == 0)
+            .build()
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ForegroundInfo(1001, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        } else {
+            ForegroundInfo(1001, notification)
+        }
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID, "Scan Progress",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply { description = "Progress scan duplikat gambar" }
+            (applicationContext.getSystemService(NotificationManager::class.java))
+                .createNotificationChannel(channel)
+        }
+    }
+
+    companion object {
+        const val CHANNEL_ID = "scan_progress"
     }
 }
