@@ -22,6 +22,9 @@ class SettingsViewModel @Inject constructor(
     private val _useTrash = MutableStateFlow(sharedPrefs.getBoolean("useTrash", true))
     val useTrash: StateFlow<Boolean> = _useTrash.asStateFlow()
 
+    private val _excludedFolders = MutableStateFlow(sharedPrefs.getStringSet("excludedFolders", emptySet())?.toList() ?: emptyList())
+    val excludedFolders: StateFlow<List<String>> = _excludedFolders.asStateFlow()
+
     fun updateThreshold(value: Float) {
         _similarityThreshold.value = value
         sharedPrefs.edit().putFloat("similarityThreshold", value).apply()
@@ -30,5 +33,20 @@ class SettingsViewModel @Inject constructor(
     fun updateUseTrash(value: Boolean) {
         _useTrash.value = value
         sharedPrefs.edit().putBoolean("useTrash", value).apply()
+    }
+
+    fun addExcludedFolder(path: String) {
+        if (path.isBlank()) return
+        val currentList = _excludedFolders.value.toMutableSet()
+        currentList.add(path)
+        _excludedFolders.value = currentList.toList()
+        sharedPrefs.edit().putStringSet("excludedFolders", currentList).apply()
+    }
+
+    fun removeExcludedFolder(path: String) {
+        val currentList = _excludedFolders.value.toMutableSet()
+        currentList.remove(path)
+        _excludedFolders.value = currentList.toList()
+        sharedPrefs.edit().putStringSet("excludedFolders", currentList).apply()
     }
 }

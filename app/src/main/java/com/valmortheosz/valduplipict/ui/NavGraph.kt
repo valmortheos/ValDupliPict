@@ -11,6 +11,8 @@ import com.valmortheosz.valduplipict.ui.duplicates.DuplicateListScreen
 import com.valmortheosz.valduplipict.ui.onboarding.OnboardingScreen
 import com.valmortheosz.valduplipict.ui.settings.SettingsScreen
 import com.valmortheosz.valduplipict.ui.trash.TrashScreen
+import com.valmortheosz.valduplipict.ui.duplicates.PhotoViewerScreen
+
 
 @Composable
 fun NavGraph() {
@@ -37,6 +39,10 @@ fun NavGraph() {
         }
         composable("settings") {
             SettingsScreen(navController = navController)
+        }
+        composable("photo_viewer/{encodedPath}") { backStackEntry ->
+            val encodedPath = backStackEntry.arguments?.getString("encodedPath") ?: ""
+            PhotoViewerScreen(navController = navController, encodedPath = encodedPath)
         }
     }
 }

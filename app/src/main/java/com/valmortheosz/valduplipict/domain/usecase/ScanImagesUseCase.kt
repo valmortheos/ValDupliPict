@@ -10,9 +10,13 @@ import com.valmortheosz.valduplipict.domain.algorithm.SSIMCalculator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.UUID
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
+
 import javax.inject.Inject
 
 class ScanImagesUseCase @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val scanRepository: ScanRepository,
     private val hashEngine: HashEngine,
     private val ssimCalculator: SSIMCalculator,
@@ -22,14 +26,29 @@ class ScanImagesUseCase @Inject constructor(
         similarityThreshold: Float = 0.90f,
         onProgress: suspend (state: String, processed: Int, total: Int, fileName: String, duplicates: Int, spaceSaved: Long) -> Unit = { _, _, _, _, _, _ -> }
     ): List<DuplicateGroup> = withContext(Dispatchers.Default) {
-        val allImages = scanRepository.getAllImagesFromMediaStore()
-        if (allImages.isEmpty()) return@withContext emptyList()
+        onProgress("DISCOVERING", 0, 0, "Discovering photos...", 0, 0L)
+        val allImagesRaw = scanRepository.getAllImagesFromMediaStore()
+
+        val sharedPrefs = context.getSharedPreferences("settings_prefs", Context.MODE_PRIVATE)
+        val exclusions = sharedPrefs.getStringSet("excludedFolders", emptySet()) ?: emptySet()
+
+        val allImages = allImagesRaw.filterNot { img ->
+            exclusions.any { excludedPath -> img.filePath.startsWith(excludedPath) }
+        }
+
+        if (allImages.isEmpty()) {
+            onProgress("COMPLETED", 0, 0, "No photos found", 0, 0L)
+            return@withContext emptyList()
+        }
 
         val cachedImages = scanRepository.getCachedImages().associateBy { it.filePath }
         val processedImages = mutableListOf<ImageFile>()
 
         var progress = 0
         val total = allImages.size
+
+        onProgress("INDEXING", 0, total, "${total} photos found", 0, 0L)
+
 
         // Parallel processing of hashes if needed, but doing sequentially for now with progress
         for (img in allImages) {

@@ -68,16 +68,15 @@ class DuplicateListViewModel @Inject constructor(
         val toSelect = mutableSetOf<String>()
 
         for (group in groups) {
-            // Sort by size ascending, then by last modified ascending
+            // Sort by size descending, then by last modified descending
+            // The best quality / newest file will be at index 0.
             val sortedFiles = group.files.sortedWith(
-                compareBy<ImageFile> { it.fileSize }
-                    .thenBy { it.lastModified }
+                compareByDescending<ImageFile> { it.fileSize }
+                    .thenByDescending { it.lastModified }
             )
-            // Select all except the "best" one (largest/newest which would be at the end if we did descending)
-            // But we want to KEEP the best one, so we select the worst ones to DELETE.
-            // Wait, we sorted ascending by size/date. So the smallest/oldest are first.
-            // We want to delete the smallest/oldest. The best one is the last one.
-            for (i in 0 until sortedFiles.size - 1) {
+
+            // We want to KEEP the best one (index 0), so we select the rest (index 1 to end) to DELETE.
+            for (i in 1 until sortedFiles.size) {
                 toSelect.add(sortedFiles[i].filePath)
             }
         }

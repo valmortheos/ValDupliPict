@@ -21,12 +21,13 @@ object UseCaseModule {
     @Provides
     @Singleton
     fun provideScanImagesUseCase(
+        @dagger.hilt.android.qualifiers.ApplicationContext context: android.content.Context,
         scanRepository: ScanRepository,
         hashEngine: HashEngine,
         ssimCalculator: SSIMCalculator,
         histogramComparator: HistogramComparator
     ): ScanImagesUseCase {
-        return ScanImagesUseCase(scanRepository, hashEngine, ssimCalculator, histogramComparator)
+        return ScanImagesUseCase(context, scanRepository, hashEngine, ssimCalculator, histogramComparator)
     }
 
     @Provides

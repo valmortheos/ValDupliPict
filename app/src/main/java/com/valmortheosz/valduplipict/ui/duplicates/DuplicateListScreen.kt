@@ -19,7 +19,10 @@ import com.valmortheosz.valduplipict.R
 import com.valmortheosz.valduplipict.data.model.DuplicateGroup
 import com.valmortheosz.valduplipict.data.model.ImageFile
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
+import java.net.URLEncoder
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,6 +34,9 @@ fun DuplicateListScreen(
     val selectedFiles by viewModel.selectedFiles.collectAsState()
 
     var showDeleteConfirmation by remember { mutableStateOf(false) }
+
+    val totalFiles = duplicateGroups.sumOf { it.files.size }
+    val potentialSavings = duplicateGroups.sumOf { it.totalWastedSpace }
 
     Scaffold(
         topBar = {
@@ -81,19 +87,53 @@ fun DuplicateListScreen(
                 Text(stringResource(R.string.no_duplicates))
             }
         } else {
-            LazyColumn(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(paddingValues)
             ) {
-                items(duplicateGroups, key = { it.groupId }) { group ->
-                    DuplicateGroupCard(
-                        group = group,
-                        selectedFiles = selectedFiles,
-                        onFileClick = { file -> viewModel.toggleSelection(file.filePath) }
-                    )
+                // Header Summary
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text("Groups", style = MaterialTheme.typography.labelMedium)
+                            Text("${duplicateGroups.size}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        }
+                        Column {
+                            Text("Files", style = MaterialTheme.typography.labelMedium)
+                            Text("$totalFiles", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text("Savings", style = MaterialTheme.typography.labelMedium)
+                            Text(formatSize(potentialSavings), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                }
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(duplicateGroups, key = { it.groupId }) { group ->
+                        DuplicateGroupCard(
+                            group = group,
+                            selectedFiles = selectedFiles,
+                            onFileSelect = { file -> viewModel.toggleSelection(file.filePath) },
+                            onFileOpen = { file ->
+                                val encodedPath = URLEncoder.encode(file.filePath, "UTF-8")
+                                navController.navigate("photo_viewer/$encodedPath")
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -150,8 +190,11 @@ fun DuplicateListScreen(
 fun DuplicateGroupCard(
     group: DuplicateGroup,
     selectedFiles: Set<String>,
-    onFileClick: (ImageFile) -> Unit
+    onFileSelect: (ImageFile) -> Unit,
+    onFileOpen: (ImageFile) -> Unit
 ) {
+    val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -165,35 +208,81 @@ fun DuplicateGroupCard(
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 group.files.forEach { file ->
                     val isSelected = selectedFiles.contains(file.filePath)
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .aspectRatio(1f)
-                            .clickable { onFileClick(file) }
+                    Row(
+                        modifier = Modifier.fillMaxWidth().clickable { onFileSelect(file) },
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        AsyncImage(
-                            model = File(file.filePath),
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                        if (isSelected) {
-                            Surface(
-                                modifier = Modifier.fillMaxSize(),
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text("✅", style = MaterialTheme.typography.headlineMedium)
-                                }
-                            }
+                        // Thumbnail
+                        Box(
+                            modifier = Modifier
+                                .weight(0.3f)
+                                .aspectRatio(1f)
+                                .clickable { onFileOpen(file) }
+                        ) {
+                            AsyncImage(
+                                model = File(file.filePath),
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
                         }
+
+                        // Details
+                        Column(
+                            modifier = Modifier.weight(0.7f),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = file.fileName,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1
+                                )
+                                Checkbox(
+                                    checked = isSelected,
+                                    onCheckedChange = { onFileSelect(file) },
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+
+                            Text(
+                                text = "Path: ${file.filePath.substringBeforeLast("/")}/",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1
+                            )
+                            Text(
+                                text = "Size: ${formatSize(file.fileSize)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "Resolution: ${file.width} x ${file.height}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "Date: ${dateFormat.format(Date(file.lastModified * 1000))}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    if (file != group.files.last()) {
+                        HorizontalDivider()
                     }
                 }
             }
