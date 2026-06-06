@@ -49,4 +49,15 @@ class SettingsViewModel @Inject constructor(
         _excludedFolders.value = currentList.toList()
         sharedPrefs.edit().putStringSet("excludedFolders", currentList).apply()
     }
+
+    fun addQuickExclusions(paths: List<String>) {
+        val currentList = _excludedFolders.value.toMutableSet()
+        paths.forEach { path ->
+            if (path.isNotBlank()) {
+                currentList.add(path)
+            }
+        }
+        _excludedFolders.value = currentList.toList()
+        sharedPrefs.edit().putStringSet("excludedFolders", currentList).apply()
+    }
 }
