@@ -4,6 +4,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -44,7 +46,7 @@ fun DuplicateListScreen(
                 title = { Text(stringResource(R.string.scan_results_title)) },
                 actions = {
                     IconButton(onClick = { viewModel.autoSelectSmart() }) {
-                        Text("✨") // Smart Select
+                        Icon(androidx.compose.material.icons.Icons.Default.AutoAwesome, contentDescription = null) // Smart Select
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -77,7 +79,7 @@ fun DuplicateListScreen(
         floatingActionButton = {
             if (selectedFiles.isNotEmpty()) {
                 FloatingActionButton(onClick = { showDeleteConfirmation = true }) {
-                    Text("🗑️") // Delete icon
+                    Icon(androidx.compose.material.icons.Icons.Default.Delete, contentDescription = null) // Delete icon
                 }
             }
         }
