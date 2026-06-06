@@ -32,7 +32,7 @@ import kotlinx.coroutines.flow.first
 
 
 enum class ScanState {
-    IDLE, INDEXING, HASHING, FINALIZING, COMPLETED, ERROR, CANCELLED
+    IDLE, DISCOVERING, INDEXING, HASHING, FINALIZING, COMPLETED, ERROR, CANCELLED
 }
 
 data class ScanProgress(
@@ -67,6 +67,20 @@ class DashboardViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
+
+
+    init {
+        viewModelScope.launch {
+            // Check for existing running scans
+            WorkManager.getInstance(context).getWorkInfosForUniqueWorkFlow("val_scan").collect { infos ->
+                val activeInfo = infos.firstOrNull { !it.state.isFinished }
+                if (activeInfo != null) {
+                    _uiState.update { it.copy(isScanning = true) }
+                    observeWorkProgress(activeInfo.id)
+                }
+            }
+        }
+    }
 
     fun startScan() {
         val threshold = sharedPrefs.getFloat("similarityThreshold", 0.90f)

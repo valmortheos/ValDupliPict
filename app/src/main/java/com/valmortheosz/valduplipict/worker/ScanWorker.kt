@@ -29,13 +29,20 @@ class ScanWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
-        setForeground(buildForegroundInfo("Memulai scan...", 0))
+        setForeground(buildForegroundInfo("Stage 1: Discovering Photos...", 0))
         try {
             val similarityThreshold = inputData.getFloat("similarityThreshold", 0.90f)
 
             val duplicateGroups = scanImagesUseCase.invoke(similarityThreshold) { state, processed, total, fileName, duplicates, spaceSaved ->
                 val pct = if (total > 0) (processed * 100 / total) else 0
-                setForeground(buildForegroundInfo(fileName.ifEmpty { "Memproses..." }, pct))
+                val title = when (state) {
+                    "DISCOVERING" -> "Stage 1: Discovering Photos..."
+                    "INDEXING" -> "Stage 1: Analyzing ${total} photos"
+                    "FINALIZING" -> "Stage 2: Analyzing Duplicates..."
+                    "COMPLETED" -> "Scan Complete: ${duplicates} duplicates found"
+                    else -> "Scanning: $processed / $total files"
+                }
+                setForeground(buildForegroundInfo(title, pct))
                 setProgressAsync(
                     workDataOf(
                         "state" to state,

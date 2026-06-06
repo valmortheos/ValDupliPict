@@ -13,6 +13,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Save
+
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -46,6 +55,7 @@ fun DashboardScreen(
     val uiState by viewModel.uiState.collectAsState()
     val scanProgress by viewModel.scanProgress.collectAsState()
     val context = LocalContext.current
+    val haptics = LocalHapticFeedback.current
 
     val permissionState = rememberPermissionState(
         if (Build.VERSION.SDK_INT >= 33) Manifest.permission.READ_MEDIA_IMAGES
@@ -131,14 +141,14 @@ fun DashboardScreen(
             ) {
                 StatCard(
                     modifier = Modifier.weight(1f),
-                    icon = "🖼️",
+                    icon = Icons.Default.Image,
                     label = "Total Foto",
                     value = uiState.totalImages.toString(),
                     containerColor = MaterialTheme.colorScheme.surfaceVariant
                 )
                 StatCard(
                     modifier = Modifier.weight(1f),
-                    icon = "📋",
+                    icon = Icons.Default.ContentCopy,
                     label = "Duplikat",
                     value = uiState.duplicateGroups.toString(),
                     containerColor = if (uiState.duplicateGroups > 0)
@@ -150,7 +160,7 @@ fun DashboardScreen(
                 )
                 StatCard(
                     modifier = Modifier.weight(1f),
-                    icon = "💾",
+                    icon = Icons.Default.Save,
                     label = "Bisa Hemat",
                     value = formatBytes(uiState.spaceSavedBytes),
                     containerColor = MaterialTheme.colorScheme.surfaceVariant
@@ -178,7 +188,7 @@ fun DashboardScreen(
                         .padding(vertical = 32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(text = "🔍", fontSize = 64.sp)
+                    Icon(Icons.Outlined.Search, contentDescription = null, modifier = Modifier.size(64.dp))
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = "Belum ada scan",
@@ -200,6 +210,7 @@ fun DashboardScreen(
             val isScanning = uiState.isScanning
             Button(
                 onClick = {
+                    haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                     if (isScanning) {
                         viewModel.cancelScan()
                     } else {
@@ -298,7 +309,7 @@ fun ScanProgressCard(
 
 @Composable
 private fun StatCard(
-    icon: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
     value: String,
     modifier: Modifier = Modifier,
@@ -314,7 +325,7 @@ private fun StatCard(
             modifier = Modifier.padding(12.dp),
             horizontalAlignment = Alignment.Start
         ) {
-            Text(text = icon, fontSize = 24.sp)
+            Icon(icon, contentDescription = null, modifier = Modifier.size(24.dp))
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = value,
