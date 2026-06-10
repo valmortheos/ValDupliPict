@@ -1,4 +1,4 @@
-package com.valmortheosz.valduplipict.ui.theme
+package com.valmortheosz.valduplipict.core.designsystem
 
 import android.app.Activity
 import android.os.Build

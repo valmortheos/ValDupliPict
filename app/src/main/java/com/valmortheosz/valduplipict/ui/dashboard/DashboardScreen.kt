@@ -1,221 +1,193 @@
 package com.valmortheosz.valduplipict.ui.dashboard
-import android.Manifest
-import android.os.Build
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
+
+import androidx.compose.animation.*
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Save
-
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import com.valmortheosz.valduplipict.R
-import java.util.Locale
+import android.Manifest
+import android.os.Build
 
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
-    navController: NavController,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val scanProgress by viewModel.scanProgress.collectAsState()
-    val context = LocalContext.current
-    var showCancelDialog by remember { mutableStateOf(false) }
+
     val haptics = LocalHapticFeedback.current
+    var showCancelDialog by remember { mutableStateOf(false) }
 
     val permissionState = rememberPermissionState(
-        if (Build.VERSION.SDK_INT >= 33) Manifest.permission.READ_MEDIA_IMAGES
-        else Manifest.permission.READ_EXTERNAL_STORAGE
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Manifest.permission.READ_MEDIA_IMAGES
+        } else {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
     )
 
-    LaunchedEffect(Unit) { viewModel.loadStats() }
-
-    LaunchedEffect(scanProgress.state) {
-        if (scanProgress.state == ScanState.COMPLETED && scanProgress.duplicatesFound > 0) {
-            navController.navigate("duplicates") {
-                popUpTo("dashboard") { inclusive = false }
-            }
-        }
+    LaunchedEffect(Unit) {
+        viewModel.loadStats()
     }
 
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    icon = { Text("Home") },
-                    label = { Text(stringResource(R.string.nav_home)) },
-                    selected = true,
-                    onClick = { /* Already here */ }
-                )
-                NavigationBarItem(
-                    icon = { Text("Res") },
-                    label = { Text(stringResource(R.string.nav_results)) },
-                    selected = false,
-                    onClick = { navController.navigate("duplicates") }
-                )
-                NavigationBarItem(
-                    icon = { Text("Set") },
-                    label = { Text(stringResource(R.string.nav_settings)) },
-                    selected = false,
-                    onClick = { navController.navigate("settings") }
-                )
-            }
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text("ValDupliPict", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                ),
+            )
         }
-    ) { padding ->
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
+                .padding(paddingValues)
+                .background(MaterialTheme.colorScheme.background)
         ) {
+            // Hero section
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primaryContainer,
-                                MaterialTheme.colorScheme.background
-                            )
-                        )
-                    )
-                    .padding(horizontal = 20.dp, vertical = 24.dp)
+                    .padding(16.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(MaterialTheme.colorScheme.primaryContainer)
+                    .padding(24.dp)
             ) {
                 Column {
                     Text(
-                        text = "ValDupliPict",
-                        style = MaterialTheme.typography.headlineMedium,
+                        text = "Clean up your gallery",
+                        style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Temukan & hapus foto duplikat",
+                        text = "Find & remove duplicate photos to free up space.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
-
+            // Stats grid
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 StatCard(
                     modifier = Modifier.weight(1f),
                     icon = Icons.Default.Image,
-                    label = "Total Foto",
-                    value = uiState.totalImages.toString(),
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    label = "Total Photos",
+                    value = uiState.totalImages.toString()
                 )
                 StatCard(
                     modifier = Modifier.weight(1f),
                     icon = Icons.Default.ContentCopy,
-                    label = "Duplikat",
+                    label = "Duplicates",
                     value = uiState.duplicateGroups.toString(),
-                    containerColor = if (uiState.duplicateGroups > 0)
-                        MaterialTheme.colorScheme.errorContainer
-                    else MaterialTheme.colorScheme.surfaceVariant,
-                    valueColor = if (uiState.duplicateGroups > 0)
-                        MaterialTheme.colorScheme.error
-                    else MaterialTheme.colorScheme.onSurfaceVariant
+                    isWarning = uiState.duplicateGroups > 0
                 )
                 StatCard(
                     modifier = Modifier.weight(1f),
                     icon = Icons.Default.Save,
-                    label = "Bisa Hemat",
-                    value = formatBytes(uiState.spaceSavedBytes),
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    label = "Potential Savings",
+                    value = formatBytes(uiState.spaceSavedBytes)
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            AnimatedVisibility(
-                visible = uiState.isScanning,
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut()
-            ) {
-                ScanProgressCard(
-                    progress = scanProgress,
-                    onCancel = { viewModel.cancelScan() },
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-            }
-
-            AnimatedVisibility(visible = !uiState.isScanning && uiState.duplicateGroups == 0) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(Icons.Outlined.Search, contentDescription = null, modifier = Modifier.size(64.dp))
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "Belum ada scan",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
+            // Scan Progress or Empty State
+            AnimatedContent(
+                targetState = uiState.isScanning,
+                transitionSpec = {
+                    fadeIn(animationSpec = spring()) togetherWith fadeOut(animationSpec = spring())
+                }, label = "ScanState"
+            ) { isScanning ->
+                if (isScanning) {
+                    ScanProgressCard(
+                        progress = scanProgress,
+                        modifier = Modifier.padding(horizontal = 16.dp)
                     )
-                    Text(
-                        text = "Ketuk tombol di bawah untuk mulai mendeteksi foto duplikat",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
+                } else if (uiState.duplicateGroups == 0) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(80.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.secondaryContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                Icons.Outlined.Search,
+                                contentDescription = null,
+                                modifier = Modifier.size(40.dp),
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "No duplicates found yet",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = "Tap the button below to start scanning.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                } else {
+                     Box(modifier = Modifier.fillMaxWidth().height(120.dp), contentAlignment = Alignment.Center) {
+                          Text("Scan complete. View results in Duplicates tab.", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                     }
                 }
             }
 
             Spacer(modifier = Modifier.weight(1f))
 
-            val isScanning = uiState.isScanning
+            // Action Button
             Button(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                    if (isScanning) {
+                    if (uiState.isScanning) {
                         showCancelDialog = true
                     } else {
                         if (permissionState.status.isGranted) {
@@ -227,35 +199,36 @@ fun DashboardScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp)
-                    .height(56.dp),
-                shape = RoundedCornerShape(16.dp),
+                    .padding(16.dp)
+                    .height(64.dp),
+                shape = RoundedCornerShape(32.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isScanning)
-                        MaterialTheme.colorScheme.error
-                    else MaterialTheme.colorScheme.primary
-                )
+                    containerColor = if (uiState.isScanning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                ),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
             ) {
-                if (isScanning) {
-                    Icon(Icons.Default.Close, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Batalkan Scan", style = MaterialTheme.typography.titleMedium)
-                } else {
-                    Icon(Icons.Default.Search, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Mulai Scan", style = MaterialTheme.typography.titleMedium)
-                }
+                Icon(
+                    if (uiState.isScanning) Icons.Default.Close else Icons.Default.Search,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    text = if (uiState.isScanning) "Cancel Scan" else "Start Scan",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
             }
 
             if (!permissionState.status.isGranted) {
                 Text(
-                    text = "Izin akses foto diperlukan untuk scan",
+                    text = "Storage permission is required to scan photos.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
-                        .padding(bottom = 8.dp),
+                        .padding(bottom = 16.dp),
                     textAlign = TextAlign.Center
                 )
             }
@@ -265,8 +238,9 @@ fun DashboardScreen(
     if (showCancelDialog) {
         AlertDialog(
             onDismissRequest = { showCancelDialog = false },
-            title = { Text("Cancel current scan?") },
-            text = { Text("This process will stop immediately.") },
+            title = { Text("Cancel Scan?") },
+            text = { Text("Are you sure you want to cancel the current scanning process?") },
+            icon = { Icon(Icons.Default.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -275,12 +249,12 @@ fun DashboardScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Cancel Scan")
+                    Text("Yes, Cancel")
                 }
             },
             dismissButton = {
-                OutlinedButton(onClick = { showCancelDialog = false }) {
-                    Text("Continue Scan")
+                TextButton(onClick = { showCancelDialog = false }) {
+                    Text("Continue")
                 }
             }
         )
@@ -288,84 +262,121 @@ fun DashboardScreen(
 }
 
 @Composable
-fun ScanProgressCard(
-    progress: ScanProgress,
-    onCancel: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = "Scanning...",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            val pct = if (progress.totalCount > 0) progress.processedCount.toFloat() / progress.totalCount else 0f
-            LinearProgressIndicator(
-                progress = { pct },
-                modifier = Modifier.fillMaxWidth().height(8.dp),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "${progress.processedCount} / ${progress.totalCount} files (${progress.state.name})",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            if (progress.currentFileName.isNotEmpty()) {
-                Text(
-                    text = progress.currentFileName,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    maxLines = 1
-                )
-            }
-        }
-    }
-}
-
-@Composable
 private fun StatCard(
+    modifier: Modifier = Modifier,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
     value: String,
-    modifier: Modifier = Modifier,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceVariant,
-    valueColor: Color = MaterialTheme.colorScheme.onSurfaceVariant
+    isWarning: Boolean = false
 ) {
+    val containerColor = if (isWarning) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceVariant
+    val contentColor = if (isWarning) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSurfaceVariant
+    val valueColor = if (isWarning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = containerColor)
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.Start
         ) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(24.dp))
-            Spacer(modifier = Modifier.height(8.dp))
+            Icon(icon, contentDescription = null, modifier = Modifier.size(28.dp), tint = contentColor)
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = value,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = valueColor
             )
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                style = MaterialTheme.typography.labelMedium,
+                color = contentColor.copy(alpha = 0.8f),
+                lineHeight = 14.sp
             )
+        }
+    }
+}
+
+@Composable
+fun ScanProgressCard(
+    progress: ScanProgress,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    strokeWidth = 3.dp,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "Scanning Photos...",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            val pct = if (progress.totalCount > 0) progress.processedCount.toFloat() / progress.totalCount else 0f
+
+            LinearProgressIndicator(
+                progress = { pct },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "${progress.processedCount} of ${progress.totalCount}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                )
+                Text(
+                    text = "${(pct * 100).toInt()}%",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            if (progress.currentFileName.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = progress.currentFileName,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    maxLines = 1
+                )
+            }
         }
     }
 }

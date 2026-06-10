@@ -4,8 +4,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,10 +22,13 @@ import com.valmortheosz.valduplipict.R
 import com.valmortheosz.valduplipict.data.model.DuplicateGroup
 import com.valmortheosz.valduplipict.data.model.ImageFile
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 import java.net.URLEncoder
+import java.text.SimpleDateFormat
+import java.util.*
+import com.valmortheosz.valduplipict.core.designsystem.SimilarityBadge
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.animation.AnimatedVisibility
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,50 +47,39 @@ fun DuplicateListScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.scan_results_title)) },
+                title = {
+                    Text(
+                        if (selectedFiles.isNotEmpty()) "${selectedFiles.size} Selected"
+                        else "Duplicates",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 actions = {
-                    IconButton(onClick = { viewModel.autoSelectSmart() }) {
-                        Icon(androidx.compose.material.icons.Icons.Default.AutoAwesome, contentDescription = null) // Smart Select
+                    AnimatedVisibility(visible = selectedFiles.isNotEmpty()) {
+                        IconButton(onClick = { showDeleteConfirmation = true }) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "Delete Selected",
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                ),
             )
-        },
-        bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    icon = { Text("🏠") },
-                    label = { Text(stringResource(R.string.nav_home)) },
-                    selected = false,
-                    onClick = { navController.navigate("dashboard") { popUpTo("dashboard") { inclusive = true } } }
-                )
-                NavigationBarItem(
-                    icon = { Text("🔍") },
-                    label = { Text(stringResource(R.string.nav_results)) },
-                    selected = true,
-                    onClick = { /* Already here */ }
-                )
-                NavigationBarItem(
-                    icon = { Text("⚙️") },
-                    label = { Text(stringResource(R.string.nav_settings)) },
-                    selected = false,
-                    onClick = { navController.navigate("settings") }
-                )
-            }
-        },
-        floatingActionButton = {
-            if (selectedFiles.isNotEmpty()) {
-                FloatingActionButton(onClick = { showDeleteConfirmation = true }) {
-                    Icon(androidx.compose.material.icons.Icons.Default.Delete, contentDescription = null) // Delete icon
-                }
-            }
         }
     ) { paddingValues ->
         if (duplicateGroups.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
-                Text(stringResource(R.string.no_duplicates))
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(Icons.Default.Info, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("No duplicate photos found", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("Your gallery is clean!", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
         } else {
             Column(
@@ -96,8 +89,9 @@ fun DuplicateListScreen(
             ) {
                 // Header Summary
                 Surface(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    modifier = Modifier.fillMaxWidth()
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
                     Row(
                         modifier = Modifier
@@ -106,15 +100,15 @@ fun DuplicateListScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                            Text("Groups", style = MaterialTheme.typography.labelMedium)
-                            Text("${duplicateGroups.size}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text("Groups", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f))
+                            Text("${duplicateGroups.size}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
                         }
                         Column {
-                            Text("Files", style = MaterialTheme.typography.labelMedium)
-                            Text("$totalFiles", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text("Files", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f))
+                            Text("$totalFiles", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
                         }
                         Column(horizontalAlignment = Alignment.End) {
-                            Text("Savings", style = MaterialTheme.typography.labelMedium)
+                            Text("Potential Savings", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f))
                             Text(formatSize(potentialSavings), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                         }
                     }
@@ -123,10 +117,10 @@ fun DuplicateListScreen(
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
                     items(duplicateGroups, key = { it.groupId }) { group ->
-                        DuplicateGroupCard(
+                        DuplicateGroupSection(
                             group = group,
                             selectedFiles = selectedFiles,
                             onFileSelect = { file -> viewModel.toggleSelection(file.filePath) },
@@ -143,33 +137,38 @@ fun DuplicateListScreen(
 
     if (showDeleteConfirmation) {
         ModalBottomSheet(
-            onDismissRequest = { showDeleteConfirmation = false }
+            onDismissRequest = { showDeleteConfirmation = false },
+            containerColor = MaterialTheme.colorScheme.surface
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(48.dp), tint = MaterialTheme.colorScheme.error)
                 Text(
-                    text = stringResource(R.string.confirm_delete_title),
-                    style = MaterialTheme.typography.titleLarge,
+                    text = "Delete ${selectedFiles.size} Photos?",
+                    style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = stringResource(R.string.confirm_delete_desc, selectedFiles.size),
-                    style = MaterialTheme.typography.bodyLarge
+                    text = "This action will move the selected photos to the internal app trash. They won't be deleted from your device immediately.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     OutlinedButton(
                         onClick = { showDeleteConfirmation = false },
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(24.dp)
                     ) {
-                        Text(stringResource(R.string.btn_cancel))
+                        Text("Cancel")
                     }
                     Button(
                         onClick = {
@@ -177,9 +176,10 @@ fun DuplicateListScreen(
                             showDeleteConfirmation = false
                         },
                         modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                        shape = RoundedCornerShape(24.dp)
                     ) {
-                        Text(stringResource(R.string.btn_delete))
+                        Text("Delete")
                     }
                 }
                 Spacer(modifier = Modifier.height(32.dp))
@@ -189,7 +189,7 @@ fun DuplicateListScreen(
 }
 
 @Composable
-fun DuplicateGroupCard(
+fun DuplicateGroupSection(
     group: DuplicateGroup,
     selectedFiles: Set<String>,
     onFileSelect: (ImageFile) -> Unit,
@@ -197,36 +197,54 @@ fun DuplicateGroupCard(
 ) {
     val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
 
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                SimilarityBadge(similarityScore = group.similarityScore)
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = stringResource(R.string.similar_pct, (group.similarityScore * 100).toInt()),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = if (group.similarityScore >= 0.95f) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
-                )
-                Text(
-                    text = stringResource(R.string.saved_amount, formatSize(group.totalWastedSpace)),
-                    style = MaterialTheme.typography.bodyMedium
+                    text = "Similar ${(group.similarityScore * 100).toInt()}%",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
-            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = formatSize(group.totalWastedSpace),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
 
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                group.files.forEach { file ->
-                    val isSelected = selectedFiles.contains(file.filePath)
+        // Horizontal scrollable grid or vertical list of cards
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            group.files.forEach { file ->
+                val isSelected = selectedFiles.contains(file.filePath)
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onFileSelect(file) },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    ),
+                    border = if (isSelected) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary) else null
+                ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().clickable { onFileSelect(file) },
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        modifier = Modifier.padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         // Thumbnail
                         Box(
                             modifier = Modifier
-                                .weight(0.3f)
-                                .aspectRatio(1f)
+                                .size(80.dp)
+                                .clip(RoundedCornerShape(8.dp))
                                 .clickable { onFileOpen(file) }
                         ) {
                             AsyncImage(
@@ -237,54 +255,37 @@ fun DuplicateGroupCard(
                             )
                         }
 
+                        Spacer(modifier = Modifier.width(16.dp))
+
                         // Details
                         Column(
-                            modifier = Modifier.weight(0.7f),
+                            modifier = Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = file.fileName,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    maxLines = 1
-                                )
-                                Checkbox(
-                                    checked = isSelected,
-                                    onCheckedChange = { onFileSelect(file) },
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-
                             Text(
-                                text = "Path: ${file.filePath.substringBeforeLast("/")}/",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1
+                                text = file.fileName,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                             )
                             Text(
-                                text = "Size: ${formatSize(file.fileSize)}",
+                                text = "${formatSize(file.fileSize)} • ${file.width}x${file.height}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = "Resolution: ${file.width} x ${file.height}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = "Date: ${dateFormat.format(Date(file.lastModified * 1000))}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                text = dateFormat.format(Date(file.lastModified * 1000)),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                             )
                         }
-                    }
-                    if (file != group.files.last()) {
-                        HorizontalDivider()
+
+                        Checkbox(
+                            checked = isSelected,
+                            onCheckedChange = { onFileSelect(file) },
+                            colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colorScheme.primary)
+                        )
                     }
                 }
             }
@@ -296,5 +297,5 @@ private fun formatSize(sizeInBytes: Long): String {
     if (sizeInBytes <= 0) return "0 B"
     val units = arrayOf("B", "KB", "MB", "GB", "TB")
     val digitGroups = (Math.log10(sizeInBytes.toDouble()) / Math.log10(1024.0)).toInt()
-    return String.format(Locale.getDefault(), "%.2f %s", sizeInBytes / Math.pow(1024.0, digitGroups.toDouble()), units[digitGroups])
+    return String.format(Locale.getDefault(), "%.1f %s", sizeInBytes / Math.pow(1024.0, digitGroups.toDouble()), units[digitGroups])
 }
