@@ -13,12 +13,16 @@ import com.valmortheosz.valduplipict.ui.settings.SettingsScreen
 import com.valmortheosz.valduplipict.ui.trash.TrashScreen
 import com.valmortheosz.valduplipict.ui.duplicates.PhotoViewerScreen
 
-
 @Composable
 fun NavGraph() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val sharedPreferences = context.getSharedPreferences("onboarding_prefs", android.content.Context.MODE_PRIVATE)
+    val hasSeenOnboarding = sharedPreferences.getBoolean("has_seen_onboarding", false)
+    val startDest = if (hasSeenOnboarding) "dashboard" else "onboarding"
+
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = "onboarding") {
+    NavHost(navController = navController, startDestination = startDest) {
         composable("onboarding") {
             OnboardingScreen(
                 onFinish = {
