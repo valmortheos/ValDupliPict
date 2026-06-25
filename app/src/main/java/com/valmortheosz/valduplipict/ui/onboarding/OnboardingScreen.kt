@@ -33,11 +33,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
     val context = LocalContext.current
     val sharedPreferences = context.getSharedPreferences("onboarding_prefs", Context.MODE_PRIVATE)
 
-    // Skip if already seen
-    if (sharedPreferences.getBoolean("has_seen_onboarding", false)) {
-        onFinish()
-        return
-    }
+    // Skip check moved to NavGraph
 
     val pagerState = rememberPagerState(pageCount = { 3 })
     val coroutineScope = rememberCoroutineScope()
