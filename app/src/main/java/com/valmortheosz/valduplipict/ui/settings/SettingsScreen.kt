@@ -36,42 +36,10 @@ fun SettingsScreen(
     var showAddFolderDialog by remember { mutableStateOf(false) }
     var newFolderPath by remember { mutableStateOf("") }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.settings_title)) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            )
-        },
-        bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    icon = { Icon(Icons.Outlined.Home, contentDescription = null) },
-                    label = { Text(stringResource(R.string.nav_home)) },
-                    selected = false,
-                    onClick = { navController.navigate("dashboard") { popUpTo("dashboard") { inclusive = true } } }
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Outlined.Search, contentDescription = null) },
-                    label = { Text(stringResource(R.string.nav_results)) },
-                    selected = false,
-                    onClick = { navController.navigate("duplicates") { popUpTo("dashboard") } }
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
-                    label = { Text(stringResource(R.string.nav_settings)) },
-                    selected = true,
-                    onClick = { /* Already here */ }
-                )
-            }
-        }
-    ) { paddingValues ->
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
@@ -86,21 +54,6 @@ fun SettingsScreen(
                     text = stringResource(R.string.similarity_threshold),
                     style = MaterialTheme.typography.titleMedium
                 )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    val presets = listOf(
-                        "Very Strict" to 0.95f,
-                        "Strict" to 0.90f,
-                        "Balanced" to 0.85f,
-                        "Relaxed" to 0.80f,
-                        "Aggressive" to 0.75f
-                    )
-
-                    // We'll wrap them in a horizontal scroll or just map the first few if space is tight.
-                    // For safety, let's use a FlowRow or horizontal scroll
-                }
 
                 // Advanced Slider
                 Row(verticalAlignment = Alignment.CenterVertically) {

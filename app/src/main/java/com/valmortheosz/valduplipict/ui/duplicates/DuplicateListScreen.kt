@@ -7,18 +7,17 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.valmortheosz.valduplipict.R
 import com.valmortheosz.valduplipict.data.model.DuplicateGroup
 import com.valmortheosz.valduplipict.data.model.ImageFile
 import java.io.File
@@ -28,7 +27,6 @@ import java.util.*
 import com.valmortheosz.valduplipict.core.designsystem.SimilarityBadge
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
-import androidx.compose.animation.AnimatedVisibility
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,53 +42,87 @@ fun DuplicateListScreen(
     val totalFiles = duplicateGroups.sumOf { it.files.size }
     val potentialSavings = duplicateGroups.sumOf { it.totalWastedSpace }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        if (selectedFiles.isNotEmpty()) "${selectedFiles.size} Selected"
-                        else "Duplicates",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                actions = {
-                    AnimatedVisibility(visible = selectedFiles.isNotEmpty()) {
-                        IconButton(onClick = { showDeleteConfirmation = true }) {
-                            Icon(
-                                Icons.Default.Delete,
-                                contentDescription = "Delete Selected",
-                                tint = MaterialTheme.colorScheme.error
-                            )
-                        }
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface
-                ),
-            )
-        }
-    ) { paddingValues ->
+    Box(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         if (duplicateGroups.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize().padding(paddingValues), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Default.Info, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("No duplicate photos found", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text("Your gallery is clean!", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Column(
+                modifier = Modifier.fillMaxSize().padding(32.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    Icons.Filled.PhotoLibrary,
+                    contentDescription = null,
+                    modifier = Modifier.size(80.dp),
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    text = "No duplicate photos found",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Your gallery is already clean.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(32.dp))
+                Button(
+                    onClick = { navController.navigate("dashboard") { popUpTo("dashboard") { inclusive = true } } },
+                    modifier = Modifier.fillMaxWidth().height(56.dp)
+                ) {
+                    Text("Start New Scan", style = MaterialTheme.typography.titleMedium)
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedButton(
+                    onClick = { navController.navigate("dashboard") { popUpTo("dashboard") { inclusive = true } } },
+                    modifier = Modifier.fillMaxWidth().height(56.dp)
+                ) {
+                    Text("Back to Dashboard", style = MaterialTheme.typography.titleMedium)
                 }
             }
         } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                // Header Summary
-                Surface(
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            Column(modifier = Modifier.fillMaxSize()) {
+                if (selectedFiles.isNotEmpty()) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "${selectedFiles.size} selected",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                            Button(
+                                onClick = { showDeleteConfirmation = true },
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                            ) {
+                                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(20.dp))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Delete")
+                            }
+                        }
+                    }
+                }
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Row(
@@ -116,7 +148,6 @@ fun DuplicateListScreen(
 
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
                     items(duplicateGroups, key = { it.groupId }) { group ->
@@ -220,7 +251,6 @@ fun DuplicateGroupSection(
             )
         }
 
-        // Horizontal scrollable grid or vertical list of cards
         Column(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -240,7 +270,6 @@ fun DuplicateGroupSection(
                         modifier = Modifier.padding(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Thumbnail
                         Box(
                             modifier = Modifier
                                 .size(80.dp)
@@ -257,7 +286,6 @@ fun DuplicateGroupSection(
 
                         Spacer(modifier = Modifier.width(16.dp))
 
-                        // Details
                         Column(
                             modifier = Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(4.dp)
