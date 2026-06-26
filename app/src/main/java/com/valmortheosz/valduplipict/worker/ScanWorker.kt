@@ -48,10 +48,11 @@ class ScanWorker @AssistedInject constructor(
                         "state" to state,
                         "processed" to processed,
                         "total" to total,
-                        "current_file" to fileName,
+                        "fileName" to fileName,
                         "duplicates" to duplicates,
-                        "space_saved" to spaceSaved,
-                        "algorithm" to "dHash"
+                        "spaceSaved" to spaceSaved,
+                        "skippedFilesCount" to skipped,
+                        "excludedFoldersCount" to excludedFolders
                     )
                 )
             }

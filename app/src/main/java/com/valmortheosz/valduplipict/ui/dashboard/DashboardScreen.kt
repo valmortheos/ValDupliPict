@@ -35,6 +35,7 @@ import com.google.accompanist.permissions.rememberPermissionState
 import android.Manifest
 import android.os.Build
 
+
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
@@ -60,13 +61,15 @@ fun DashboardScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Column(
+        androidx.compose.foundation.lazy.LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
-                .background(MaterialTheme.colorScheme.background)
+                .background(MaterialTheme.colorScheme.background),
+            contentPadding = PaddingValues(bottom = 100.dp)
         ) {
-            // Hero section
+            item {
+                // Hero section
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -184,53 +187,26 @@ fun DashboardScreen(
             }
 
 
-            // Quick Actions
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = "Quick Actions",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                QuickActionCard(
-                    modifier = Modifier.weight(1f),
-                    icon = Icons.Filled.PhotoLibrary,
-                    title = "View Results",
-                    onClick = { navController.navigate("duplicates") }
-                )
-                QuickActionCard(
-                    modifier = Modifier.weight(1f),
-                    icon = Icons.Filled.Delete,
-                    title = "Recycle Bin",
-                    onClick = { navController.navigate("trash") }
-                )
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                QuickActionCard(
-                    modifier = Modifier.weight(1f),
-                    icon = Icons.Filled.Settings,
-                    title = "Settings",
-                    onClick = { navController.navigate("settings") }
-                )
-                QuickActionCard(
-                    modifier = Modifier.weight(1f),
-                    icon = Icons.Filled.Storage,
-                    title = "Storage",
-                    onClick = { navController.navigate("settings") }
-                )
-            }
 
-            Spacer(modifier = Modifier.weight(1f))
 
-            // Action Button
+            }
+        }
+
+        // Bottom sticky Action Button
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(
+                    brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            MaterialTheme.colorScheme.background
+                        )
+                    )
+                )
+                .padding(bottom = 16.dp, top = 24.dp)
+        ) {
             Button(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -267,15 +243,17 @@ fun DashboardScreen(
                 )
             }
 
-            if (!permissionState.status.isGranted) {
+        }
+
+        if (!permissionState.status.isGranted) {
+            Box(modifier = Modifier.align(Alignment.TopCenter).fillMaxWidth().background(MaterialTheme.colorScheme.errorContainer)) {
                 Text(
                     text = "Storage permission is required to scan photos.",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .padding(bottom = 16.dp),
+                        .padding(16.dp),
                     textAlign = TextAlign.Center
                 )
             }
@@ -467,36 +445,4 @@ private fun formatBytes(bytes: Long): String = when {
     bytes >= 1_048_576L -> "%.1f MB".format(bytes / 1_048_576f)
     bytes >= 1024L -> "%.1f KB".format(bytes / 1024f)
     else -> "0 B"
-}
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun QuickActionCard(
-    modifier: Modifier = Modifier,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    title: String,
-    onClick: () -> Unit
-) {
-    ElevatedCard(
-        onClick = onClick,
-        modifier = modifier.height(80.dp),
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(8.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                maxLines = 1
-            )
-        }
-    }
 }
