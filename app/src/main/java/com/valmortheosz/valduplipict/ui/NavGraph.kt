@@ -33,7 +33,7 @@ fun NavGraph() {
             )
         }
         composable("dashboard") {
-            DashboardScreen()
+            DashboardScreen(navController = navController)
         }
         composable("duplicates") {
             DuplicateListScreen(navController = navController)
