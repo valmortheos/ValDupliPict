@@ -11,6 +11,11 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Storage
+import androidx.navigation.NavController
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,6 +38,7 @@ import android.os.Build
 @OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
+    navController: androidx.navigation.NavController,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -175,10 +181,63 @@ fun DashboardScreen(
                         )
                     }
                 } else {
-                     Box(modifier = Modifier.fillMaxWidth().height(120.dp), contentAlignment = Alignment.Center) {
-                          Text("Scan complete. View results in Duplicates tab.", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                     }
+                     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Text("Scan complete!", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                        Button(
+                            onClick = { navController.navigate("duplicates") },
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                        ) {
+                            Icon(Icons.Filled.PhotoLibrary, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text("View Duplicate Results")
+                        }
+                    }
                 }
+            }
+
+
+            // Quick Actions
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = "Quick Actions",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                QuickActionCard(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Filled.PhotoLibrary,
+                    title = "View Results",
+                    onClick = { navController.navigate("duplicates") }
+                )
+                QuickActionCard(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Filled.Delete,
+                    title = "Recycle Bin",
+                    onClick = { navController.navigate("trash") }
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                QuickActionCard(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Filled.Settings,
+                    title = "Settings",
+                    onClick = { navController.navigate("settings") }
+                )
+                QuickActionCard(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Filled.Storage,
+                    title = "Storage",
+                    onClick = { navController.navigate("settings") }
+                )
             }
 
             Spacer(modifier = Modifier.weight(1f))
@@ -386,4 +445,36 @@ private fun formatBytes(bytes: Long): String = when {
     bytes >= 1_048_576L -> "%.1f MB".format(bytes / 1_048_576f)
     bytes >= 1024L -> "%.1f KB".format(bytes / 1024f)
     else -> "0 B"
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun QuickActionCard(
+    modifier: Modifier = Modifier,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    onClick: () -> Unit
+) {
+    ElevatedCard(
+        onClick = onClick,
+        modifier = modifier.height(80.dp),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(8.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(24.dp), tint = MaterialTheme.colorScheme.primary)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                maxLines = 1
+            )
+        }
+    }
 }

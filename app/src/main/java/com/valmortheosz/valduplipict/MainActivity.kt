@@ -12,7 +12,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ValDupliPictTheme {
-                com.valmortheosz.valduplipict.ui.NavGraph()
+                com.valmortheosz.valduplipict.ui.MainScreen()
             }
         }
     }
