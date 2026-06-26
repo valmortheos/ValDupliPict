@@ -59,23 +59,11 @@ fun DashboardScreen(
         viewModel.loadStats()
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text("ValDupliPict", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface
-                ),
-            )
-        }
-    ) { paddingValues ->
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(16.dp)
                 .background(MaterialTheme.colorScheme.background)
         ) {
             // Hero section
@@ -427,6 +415,7 @@ fun ScanProgressCard(
                 )
             }
 
+
             if (progress.currentFileName.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -436,6 +425,39 @@ fun ScanProgressCard(
                     maxLines = 1
                 )
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        text = "Excluded folders: ${progress.excludedFoldersCount}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                    )
+                    Text(
+                        text = "Skipped files: ${progress.skippedFilesCount}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                    )
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    if (progress.duplicatesFound > 0) {
+                        Text(
+                            text = "Duplicates: ${progress.duplicatesFound}",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
         }
     }
 }

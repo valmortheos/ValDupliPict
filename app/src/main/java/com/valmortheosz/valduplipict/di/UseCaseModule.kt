@@ -33,9 +33,10 @@ object UseCaseModule {
     @Provides
     @Singleton
     fun provideDeleteDuplicatesUseCase(
-        @ApplicationContext context: Context
+        @ApplicationContext context: Context,
+        trashedFileDao: com.valmortheosz.valduplipict.data.db.TrashedFileDao
     ): DeleteDuplicatesUseCase {
-        return DeleteDuplicatesUseCase(context)
+        return DeleteDuplicatesUseCase(context, trashedFileDao)
     }
 
     @Provides

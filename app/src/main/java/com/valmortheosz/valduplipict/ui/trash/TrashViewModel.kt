@@ -4,12 +4,15 @@ import android.content.Context
 import android.os.Environment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.valmortheosz.valduplipict.data.db.TrashedFileDao
+import com.valmortheosz.valduplipict.data.model.TrashedFile
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -17,13 +20,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class TrashViewModel @Inject constructor(
-    @ApplicationContext private val context: Context
+    private val trashedFileDao: TrashedFileDao
 ) : ViewModel() {
 
-    private val trashDir = File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), ".valduplipict_trash")
-
-    private val _trashFiles = MutableStateFlow<List<File>>(emptyList())
-    val trashFiles: StateFlow<List<File>> = _trashFiles.asStateFlow()
+    private val _trashFiles = MutableStateFlow<List<TrashedFile>>(emptyList())
+    val trashFiles: StateFlow<List<TrashedFile>> = _trashFiles.asStateFlow()
 
     init {
         loadTrashFiles()
@@ -31,49 +32,54 @@ class TrashViewModel @Inject constructor(
 
     private fun loadTrashFiles() {
         viewModelScope.launch(Dispatchers.IO) {
-            if (trashDir.exists()) {
-                val files = trashDir.listFiles()?.toList() ?: emptyList()
-                _trashFiles.value = files.sortedByDescending { it.lastModified() }
-            } else {
-                _trashFiles.value = emptyList()
+            trashedFileDao.getAllTrashedFiles().collectLatest { files ->
+                _trashFiles.value = files
             }
         }
     }
 
-    fun restoreFile(file: File) {
+    fun restoreFile(trashedFile: TrashedFile) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                // The original name is after the first underscore: timestamp_originalName
-                val originalName = file.name.substringAfter("_")
+                val fileInTrash = File(trashedFile.trashPath)
+                val originalFile = File(trashedFile.originalPath)
 
-                // Assuming original path was in Pictures for simplicity, or we can use MediaStore to find the right place.
-                // A better approach would be storing original paths in DB, but for now we restore to Pictures.
-                val restoreDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-                val restoredFile = File(restoreDir, originalName)
+                // Ensure parent exists
+                originalFile.parentFile?.mkdirs()
 
-                if (file.renameTo(restoredFile)) {
-                    loadTrashFiles()
+                if (fileInTrash.exists()) {
+                    fileInTrash.copyTo(originalFile, overwrite = true)
+                    fileInTrash.delete()
                 }
+
+                trashedFileDao.deleteTrashedFile(trashedFile)
+
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
     }
 
-    fun deleteFilePermanently(file: File) {
+    fun deleteFilePermanently(trashedFile: TrashedFile) {
         viewModelScope.launch(Dispatchers.IO) {
-            if (file.delete()) {
-                loadTrashFiles()
+            val fileInTrash = File(trashedFile.trashPath)
+            if (fileInTrash.exists()) {
+                fileInTrash.delete()
             }
+            trashedFileDao.deleteTrashedFile(trashedFile)
         }
     }
 
     fun emptyTrash() {
         viewModelScope.launch(Dispatchers.IO) {
-            if (trashDir.exists()) {
-                trashDir.listFiles()?.forEach { it.delete() }
-                loadTrashFiles()
+            val files = trashedFileDao.getAllTrashedFilesList()
+            files.forEach { trashedFile ->
+                val fileInTrash = File(trashedFile.trashPath)
+                if (fileInTrash.exists()) {
+                    fileInTrash.delete()
+                }
             }
+            trashedFileDao.clearAll()
         }
     }
 }
