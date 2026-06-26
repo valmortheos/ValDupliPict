@@ -42,7 +42,9 @@ data class ScanProgress(
     val duplicatesFound: Int = 0,
     val spaceSavedBytes: Long = 0L,
     val currentFileName: String = "",
-    val currentAlgorithm: String = ""
+    val currentAlgorithm: String = "",
+    val skippedFilesCount: Int = 0,
+    val excludedFoldersCount: Int = 0
 )
 
 data class DashboardUiState(

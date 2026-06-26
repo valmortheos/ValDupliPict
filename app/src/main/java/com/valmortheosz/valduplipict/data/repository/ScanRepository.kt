@@ -13,13 +13,25 @@ import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 
+data class MediaStoreScanResult(
+    val images: List<ImageFile>,
+    val skippedFilesCount: Int,
+    val excludedFoldersCount: Int
+)
+
 @Singleton
 class ScanRepository @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val imageDao: ImageDao
+    private val imageDao: ImageDao,
+    private val settingsRepository: SettingsRepository
 ) {
-    suspend fun getAllImagesFromMediaStore(): List<ImageFile> = withContext(Dispatchers.IO) {
+    suspend fun getAllImagesFromMediaStore(): MediaStoreScanResult = withContext(Dispatchers.IO) {
         val images = mutableListOf<ImageFile>()
+        val excludedFolders = settingsRepository.getExcludedFolders()
+
+        var skippedFilesCount = 0
+        val observedExcludedFolders = mutableSetOf<String>()
+
         val projection = arrayOf(
             MediaStore.Images.Media.DATA,
             MediaStore.Images.Media.DISPLAY_NAME,
@@ -51,6 +63,19 @@ class ScanRepository @Inject constructor(
                 val path = cursor.getString(dataColumn)
                 if (path == null) continue
 
+                val isExcluded = excludedFolders.any { excludedPath ->
+                    path.startsWith(excludedPath)
+                }
+
+                if (isExcluded) {
+                    skippedFilesCount++
+                    val matchedFolder = excludedFolders.firstOrNull { path.startsWith(it) }
+                    if (matchedFolder != null) {
+                        observedExcludedFolders.add(matchedFolder)
+                    }
+                    continue
+                }
+
                 val file = File(path)
                 if (!file.exists()) continue
 
@@ -74,8 +99,10 @@ class ScanRepository @Inject constructor(
                 )
             }
         }
-        return@withContext images
+
+        return@withContext MediaStoreScanResult(images, skippedFilesCount, observedExcludedFolders.size)
     }
+
 
     suspend fun getCachedImages(): List<ImageFile> {
         return imageDao.getAllImages()

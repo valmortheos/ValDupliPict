@@ -30,4 +30,9 @@ object DatabaseModule {
     fun provideImageDao(database: AppDatabase): ImageDao {
         return database.imageDao()
     }
+
+    @Provides
+    fun provideTrashedFileDao(database: AppDatabase): com.valmortheosz.valduplipict.data.db.TrashedFileDao {
+        return database.trashedFileDao()
+    }
 }

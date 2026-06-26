@@ -24,20 +24,15 @@ class ScanImagesUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(
         similarityThreshold: Float = 0.90f,
-        onProgress: suspend (state: String, processed: Int, total: Int, fileName: String, duplicates: Int, spaceSaved: Long) -> Unit = { _, _, _, _, _, _ -> }
+        onProgress: suspend (state: String, processed: Int, total: Int, fileName: String, duplicates: Int, spaceSaved: Long, skipped: Int, excludedFolders: Int) -> Unit = { _, _, _, _, _, _, _, _ -> }
     ): List<DuplicateGroup> = withContext(Dispatchers.Default) {
-        onProgress("DISCOVERING", 0, 0, "Discovering photos...", 0, 0L)
-        val allImagesRaw = scanRepository.getAllImagesFromMediaStore()
+        onProgress("DISCOVERING", 0, 0, "Discovering photos...", 0, 0L, 0, 0)
+        val scanResult = scanRepository.getAllImagesFromMediaStore()
+        val allImages = scanResult.images
 
-        val sharedPrefs = context.getSharedPreferences("settings_prefs", Context.MODE_PRIVATE)
-        val exclusions = sharedPrefs.getStringSet("excludedFolders", emptySet()) ?: emptySet()
-
-        val allImages = allImagesRaw.filterNot { img ->
-            exclusions.any { excludedPath -> img.filePath.startsWith(excludedPath) }
-        }
 
         if (allImages.isEmpty()) {
-            onProgress("COMPLETED", 0, 0, "No photos found", 0, 0L)
+            onProgress("COMPLETED", 0, 0, "No photos found", 0, 0L, scanResult.skippedFilesCount, scanResult.excludedFoldersCount)
             return@withContext emptyList()
         }
 
@@ -47,7 +42,7 @@ class ScanImagesUseCase @Inject constructor(
         var progress = 0
         val total = allImages.size
 
-        onProgress("INDEXING", 0, total, "${total} photos found", 0, 0L)
+        onProgress("INDEXING", 0, total, "${total} photos found", 0, 0L, scanResult.skippedFilesCount, scanResult.excludedFoldersCount)
 
 
         // Parallel processing of hashes if needed, but doing sequentially for now with progress
@@ -62,12 +57,12 @@ class ScanImagesUseCase @Inject constructor(
                 processedImages.add(newImg)
             }
             progress++
-            if (progress % 10 == 0) onProgress("HASHING", progress, total, img.fileName, 0, 0L)
+            if (progress % 10 == 0) onProgress("HASHING", progress, total, img.fileName, 0, 0L, scanResult.skippedFilesCount, scanResult.excludedFoldersCount)
         }
 
         scanRepository.saveImagesToCache(processedImages)
 
-        onProgress("FINALIZING", total, total, "Menganalisis duplikat...", 0, 0L)
+        onProgress("FINALIZING", total, total, "Menganalisis duplikat...", 0, 0L, scanResult.skippedFilesCount, scanResult.excludedFoldersCount)
 
         // Find duplicates
         val duplicateGroups = mutableListOf<DuplicateGroup>()
@@ -140,7 +135,7 @@ class ScanImagesUseCase @Inject constructor(
 
         val duplicatesCount = duplicateGroups.size
         val spaceSaved = duplicateGroups.sumOf { it.totalWastedSpace }
-        onProgress("COMPLETED", total, total, "Selesai", duplicatesCount, spaceSaved)
+        onProgress("COMPLETED", total, total, "Selesai", duplicatesCount, spaceSaved, scanResult.skippedFilesCount, scanResult.excludedFoldersCount)
         return@withContext duplicateGroups
     }
 }

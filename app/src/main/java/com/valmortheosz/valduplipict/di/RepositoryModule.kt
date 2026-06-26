@@ -19,9 +19,10 @@ object RepositoryModule {
     @Singleton
     fun provideScanRepository(
         @ApplicationContext context: Context,
-        imageDao: ImageDao
+        imageDao: ImageDao,
+        settingsRepository: com.valmortheosz.valduplipict.data.repository.SettingsRepository
     ): ScanRepository {
-        return ScanRepository(context, imageDao)
+        return ScanRepository(context, imageDao, settingsRepository)
     }
 
     @Provides

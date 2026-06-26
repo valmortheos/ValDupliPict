@@ -33,7 +33,7 @@ class ScanWorker @AssistedInject constructor(
         try {
             val similarityThreshold = inputData.getFloat("similarityThreshold", 0.90f)
 
-            val duplicateGroups = scanImagesUseCase.invoke(similarityThreshold) { state, processed, total, fileName, duplicates, spaceSaved ->
+            val duplicateGroups = scanImagesUseCase.invoke(similarityThreshold) { state, processed, total, fileName, duplicates, spaceSaved, skipped, excludedFolders ->
                 val pct = if (total > 0) (processed * 100 / total) else 0
                 val title = when (state) {
                     "DISCOVERING" -> "Stage 1: Discovering Photos..."
